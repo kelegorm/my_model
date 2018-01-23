@@ -1,5 +1,5 @@
 name: my_model
-version: 0.0.1
+version: 0.0.2
 description: Collections with change streams
 author: Dmitriy Vasilyev <kelegorm1@gmail.com>
 homepage: https://github.com/kelegorm/my_model
@@ -8,5 +8,5 @@ environment:
   sdk: ">=1.8.0 <2.0.0"
 
 dependencies:
-  collection: ">=1.11.0 <2.0.0"
+  collection: ">=1.9.1 <2.0.0"
   meta: '^1.1.1'
