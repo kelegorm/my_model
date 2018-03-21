@@ -39,9 +39,9 @@ class MapModel implements IMapModel {
   /// can get Subchanges — which is a property own changes.
   Stream<ModelChange> get modelChanges => _changesStream.stream;
 
-  Stream<MapModelChange> get propertyChanges => modelChanges
-      .where((ch) => ch is MapModelChange)
-      .map<MapModelChange>((ch) => ch as MapModelChange);
+  Stream<SetMapModelChange> get propertyChanges => modelChanges
+      .where((ch) => ch is SetMapModelChange)
+      .map<MapModelChange>((ch) => ch as SetMapModelChange);
 
   final StreamController<ModelChange> _changesStream = new StreamController<ModelChange>.broadcast();
 
@@ -80,7 +80,7 @@ class MapModel implements IMapModel {
       deleteValue(key);
       setValue(key, newValue);
       updateValueSubscribe(key, newValue);
-      fireChange(new MapModelChange(key, oldValue, newValue));
+      fireChange(new SetMapModelChange(key, oldValue, newValue));
     }
   }
 
@@ -167,23 +167,23 @@ class MapModel implements IMapModel {
 }
 
 
-abstract class _MapModelChange extends ModelChange {
+abstract class MapModelChange extends ModelChange {
   final String key;
 
-  _MapModelChange(this.key);
+  MapModelChange(this.key);
 }
 
 
 /// That class describes change which was in model itself.
 ///
 /// It means model[key] now returns new value.
-class MapModelChange extends _MapModelChange {
+class SetMapModelChange extends MapModelChange {
   final Object newValue;
 
   /// Needed to compatibility with Observable.
   final Object oldValue;
 
-  MapModelChange(String key, this.oldValue, this.newValue) : super(key);
+  SetMapModelChange(String key, this.oldValue, this.newValue) : super(key);
 }
 
 
@@ -191,22 +191,22 @@ class MapModelChange extends _MapModelChange {
 ///
 /// Model[key] returns same object, but some internal field of
 /// object was changed.
-class MapSubModelChange extends _MapModelChange implements SubModelChange {
+class MapSubModelChange extends MapModelChange implements SubModelChange {
   final String path;
 
-  final MapModelChange originalChange;
+  final SetMapModelChange originalChange;
 
   /// [key] is a property name, which has internal change.
   ///
   /// [change] is one we got from the property. It may be just
   /// [ModelChange] or even other [MapSubModelChange].
-  MapSubModelChange(String key, _MapModelChange change)
+  MapSubModelChange(String key, MapModelChange change)
       : this.path = _calcPath(key, change),
         originalChange = change is MapSubModelChange ? change.originalChange : change,
         super(key);
 
 
-  static String _calcPath(String name, _MapModelChange change) {
+  static String _calcPath(String name, MapModelChange change) {
     return change is MapSubModelChange
         ? '$name.${change.path}' : '$name${change.key}';
   }
