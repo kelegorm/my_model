@@ -3,19 +3,16 @@ library model.map_model;
 import 'dart:async';
 
 import 'package:meta/meta.dart';
+import 'package:my_model/src/model.dart';
 import 'package:my_model/src/utils/compare.dart';
 
 /// TODO rid of that class. Nobody else should implement it.
-abstract class IModel {
+abstract class IMapModel extends IModel {
   Iterable<String> get keys;
-
-  Stream<ModelChange> get modelChanges;
 
   operator []= (String key, newValue);
 
   operator [] (String key);
-
-  operator ==(Object other);
 
   Map toJson();
 }
@@ -26,13 +23,13 @@ abstract class IModel {
 /// Keeps values in Map.
 ///
 /// Also it notifies in stream about values internal changes if
-/// they are [Model] too, so you can catch any model change in one
+/// they are [MapModel] too, so you can catch any model change in one
 /// place.
 ///
 /// It has not initial values, all values should be set through []=
 /// operator. It automatically subscribes to all values which extends
-/// [Model].
-class Model implements IModel {
+/// [MapModel].
+class MapModel implements IMapModel {
 
   Iterable<String> get keys => _values.keys;
 
@@ -54,7 +51,7 @@ class Model implements IModel {
   final Map<String, Object> _values = <String, Object>{};
 
 
-  Model();
+  MapModel();
 
   /// assumes that JSON is serialized from this class
   /// does not check existence of properties
@@ -67,7 +64,7 @@ class Model implements IModel {
   /// Don't forget never set fields directly, only through []=.
   ///
   /// todo do we need make here deep map converting to Model?
-  Model.fromMap(Map json) {
+  MapModel.fromMap(Map json) {
     /// [throws] on non-matched properties
     json.forEach((k, v) { this[k] = v; });
   }
@@ -90,7 +87,7 @@ class Model implements IModel {
   operator ==(Object other) {
     if ( this.runtimeType != other.runtimeType ) return false;
 
-    if (other is Model) {
+    if (other is MapModel) {
       try {
         // todo make cacheable or remake with hashcode.
         // TODO reimplement it with general deep map equality function.
@@ -146,7 +143,7 @@ class Model implements IModel {
   @protected
   void updateValueSubscribe(String key, newValue) {
     _submodelSubs.remove(key)?.cancel();
-    if (newValue is Model) _listenProperty(key, newValue);
+    if (newValue is MapModel) _listenProperty(key, newValue);
   }
 
 
@@ -162,7 +159,7 @@ class Model implements IModel {
   );
 
   /// Listens values to its internal changes.
-  void _listenProperty(String propertyName, Model value) {
+  void _listenProperty(String propertyName, MapModel value) {
     _submodelSubs[propertyName] = value.modelChanges.listen((change) {
       _changesStream.add(new SubModelChange(propertyName, change));
     });
@@ -170,20 +167,17 @@ class Model implements IModel {
 }
 
 
-/// Describes of [AnnotatedModel]'s property change.
-///
-/// it's base class for model changes.
-abstract class ModelChange {
+abstract class _MapModelChange extends ModelChange {
   final String key;
 
-  ModelChange(this.key);
+  _MapModelChange(this.key);
 }
 
 
 /// That class describes change which was in model itself.
 ///
 /// It means model[key] now returns new value.
-class ModelPropertyChange extends ModelChange {
+class ModelPropertyChange extends _MapModelChange {
   final Object newValue;
 
   /// Needed to compatibility with Observable.
@@ -197,7 +191,7 @@ class ModelPropertyChange extends ModelChange {
 ///
 /// Model[key] returns same object, but some internal field of
 /// object was changed.
-class SubModelChange extends ModelChange {
+class SubModelChange extends _MapModelChange {
   final String path;
 
   final ModelPropertyChange originalChange;
@@ -206,13 +200,13 @@ class SubModelChange extends ModelChange {
   ///
   /// [change] is one we got from the property. It may be just
   /// [ModelChange] or even other [SubModelChange].
-  SubModelChange(String key, ModelChange change)
+  SubModelChange(String key, _MapModelChange change)
       : this.path = _calcPath(key, change),
         originalChange = change is SubModelChange ? change.originalChange : change,
         super(key);
 
 
-  static String _calcPath(String name, ModelChange change) {
+  static String _calcPath(String name, _MapModelChange change) {
     return change is SubModelChange
         ? '$name.${change.path}' : '$name${change.key}';
   }
