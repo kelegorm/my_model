@@ -25,3 +25,8 @@ abstract class IModel {
 abstract class ModelChange {
   ModelChange();
 }
+
+
+abstract class SubModelChange extends ModelChange {
+
+}
