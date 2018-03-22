@@ -22,11 +22,7 @@ abstract class IModel {
 /// Describes of [AnnotatedModel]'s property change.
 ///
 /// it's base class for model changes.
-abstract class ModelChange {
-  ModelChange();
-}
+abstract class ModelChange {}
 
 
-abstract class SubModelChange extends ModelChange {
-
-}
+abstract class SubModelChange extends ModelChange {}

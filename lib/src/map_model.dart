@@ -39,11 +39,11 @@ class MapModel implements IMapModel {
   /// can get Subchanges — which is a property own changes.
   Stream<ModelChange> get modelChanges => _changesStream.stream;
 
-  Stream<SetMapModelChange> get propertyChanges => modelChanges
+  Stream<SetMapModelChange> get mapChanges => modelChanges
       .where((ch) => ch is SetMapModelChange)
       .map<MapModelChange>((ch) => ch as SetMapModelChange);
 
-  final StreamController<ModelChange> _changesStream = new StreamController<ModelChange>.broadcast();
+  final StreamController<MapModelChange> _changesStream = new StreamController<MapModelChange>.broadcast();
 
   /// Subscriptions to properties in case they are too [AnnotatedModel].
   final Map<String, StreamSubscription<ModelChange>> _submodelSubs = <String, StreamSubscription<ModelChange>>{};
