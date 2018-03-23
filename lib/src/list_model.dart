@@ -2,6 +2,7 @@ library model.list_model;
 
 import 'dart:async';
 
+import 'dart:collection';
 import 'package:my_model/src/model.dart';
 
 
@@ -11,20 +12,25 @@ import 'package:my_model/src/model.dart';
 ///
 /// ListModel can't contain nulls. I guess we never should keeps nulls in
 /// property lists, so, it's a way to catch a error.
-class ListModel<T> implements IModel {
+class ListModel<T> extends IterableMixin<T> implements IModel  {
   @override
   Stream<ModelChange> get modelChanges => _changesStream.stream;
 
-  final StreamController<ListModelChange> _changesStream = new StreamController<ListModelChange>.broadcast();
+  @override
+  Iterator<T> get iterator => _values.iterator;
+
+  @override
+  int get length => _values.length;
+
 
   final List<T> _values = <T>[];
-
+  final StreamController<ListModelChange> _changesStream = new StreamController<ListModelChange>.broadcast();
   final Map<IModel, StreamSubscription<ModelChange>> _subs = new Map<IModel, StreamSubscription<ModelChange>>.identity();
 
 
   ListModel();
 
-  ListModel.fromIterable(Iterable<T> items) {
+  ListModel.from(Iterable<T> items) {
     _values.addAll(items);
   }
 
